@@ -1,34 +1,57 @@
-import React from "react";
+import React, { useEffect, useState } from "react";
 import { useForm } from "react-hook-form";
 import Button from 'react-bootstrap/Button';
 import Form from 'react-bootstrap/Form';
+import Row from 'react-bootstrap/Row';
+import Col from 'react-bootstrap/Col';
 import Container from 'react-bootstrap/Container';
-
+import './styles.scss';
+import todoApi from "../../api/todoApi";
+import ListTodo from "./components/listTodo";
 const Header = () => {
-    const { register, handleSubmit } = useForm();
-    const onSubmit = data => console.log(data);
-
+    const [todos, setTodos] = useState([]);
+    const { register, formState: { errors }, handleSubmit } = useForm();
+    const onSubmit = (data) => {
+        todoApi.add({
+            title: data.todos,
+            status: true
+        });
+    };
+    useEffect(()=>{
+        const fetchTodoList = async () => {
+            const todoList = await todoApi.getAll();
+            setTodos(todoList);
+        }
+        fetchTodoList();
+    })
     return (
         <Container>
-            <Form onSubmit={handleSubmit(onSubmit)}>
-                <Form.Group className="mb-3" controlId="formBasicEmail">
-                    <Form.Label>Email address</Form.Label>
-                    <Form.Control {...register("email")} name="email" type="email" placeholder="Enter email" />
-                    <Form.Text className="text-muted">
-                        We'll never share your email with anyone else.
-                    </Form.Text>
-                </Form.Group>
-                <Form.Group className="mb-3" controlId="formBasicPassword">
-                    <Form.Label>Password</Form.Label>
-                    <Form.Control {...register("password")} type="password" placeholder="Password" />
-                </Form.Group>
-                <Form.Group className="mb-3" controlId="formBasicCheckbox">
-                    <Form.Check type="checkbox" label="Check me out" />
-                </Form.Group>
-                <Button variant="primary" type="submit">
-                    Submit
-                </Button>
-            </Form>
+            <Row className="d-flex justify-content-center">
+                <Col xxl={6} lg={6} md={7} sm={9}>
+                    <Form>
+                        <Row>
+                            <Form.Label>What is your todos?</Form.Label>
+                            <Col xs={9}>
+                                <Form.Group className="mb-3" controlId="formBasiTodo">
+                                    <Form.Control {...register("todos", { required: true, maxLength: 20 })} name="todos" type="text" placeholder="Enter todo" />
+                                    <Form.Label>{errors.todos?.type === 'required' && "Todo is required"}</Form.Label>
+                                    <Form.Text className="text-muted">
+                                        We'll never share your todo with anyone else.
+                                    </Form.Text>
+                                </Form.Group>
+                            </Col>
+                            <Col xs={3}>
+                                <Button variant="primary" type="button" onClick={handleSubmit(onSubmit)}>
+                                    Add
+                                </Button>
+                            </Col>
+                        </Row>
+                        <Row>
+                            <ListTodo todoList={todos}></ListTodo>
+                        </Row>
+                    </Form>
+                </Col>
+            </Row>
         </Container>
     )
 }
